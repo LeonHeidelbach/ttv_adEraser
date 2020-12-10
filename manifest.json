@@ -1,0 +1,28 @@
+{
+	"name":"TTV AdEraser",
+	"version":"1.0",
+	"manifest_version":2,
+	"content_scripts": [{
+		"js": ["JS/hlp.js","JS/cnt.js"],
+		"matches":["*://*.twitch.tv/*"],
+		"run_at": "document_start"
+	}],
+	"browser_action": {
+		"default_icon":"IMG/ExtIcon-128.png",
+		"default_popup": "HTML/hub.html",
+		"default_title": "TTV AdEraser"
+	},
+	"background": {
+		"persistent": true,
+		"scripts": ["JS/hlp.js","JS/bkg.js"]
+	},
+	"icons": {
+		"16": "IMG/ExtIcon-16.png",
+		"48": "IMG/ExtIcon-48.png",
+		"128": "IMG/ExtIcon-128.png"
+   	},
+	"permissions":["activeTab","tabs","notifications","cookies","alarms","storage","webNavigation","webRequest","webRequestBlocking","*://*.twitch.tv/*"],
+	"web_accessible_resources":["JS/*.js","IMG/*.png","IMG/*.svg","HTML/*.css"],
+	"description": "TTV AdEraser aims to remove livestream ads as well as add some useful features to our favourite streaming site.",
+	"content_security_policy": "script-src 'self'; object-src 'self'"
+}
