@@ -148,7 +148,7 @@ var ttv_adEraser_hub = `
 				<span style="color: #ffffff; font-size: 9pt; text-align: justify;">This extension can be used completely free of charge. However, if you like it and feel generous you can buy me a coffee. 😄</span>
 			</div>
 			<div style="padding: 0 0 10px 0;">
-				<span style="color: #ffffff; font-size: 9pt; text-align: left; margin: 10px 0 0 0;">The source code is available on <a href="https://www.github.com/LeonHeidelbach" target="_blank">GitHub</a>.</span>
+				<span style="color: #ffffff; font-size: 9pt; text-align: left; margin: 10px 0 0 0;">The source code is available on <a href="https://github.com/LeonHeidelbach/ttv_adEraser" target="_blank">GitHub</a>.</span>
 			</div>
 			<a href="https://www.paypal.com/donate/?hosted_button_id=MWGYXMSZ7H2B2" target="_blank" role="button" class="buttonBG vcentered" style="padding: 5px 10px 5px 10px;">
 				<span style="color: #FFFFFF; font-size: 10pt;">Buy the dev a coffee ☕</span>

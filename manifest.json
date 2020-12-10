@@ -21,7 +21,7 @@
 		"48": "IMG/ExtIcon-48.png",
 		"128": "IMG/ExtIcon-128.png"
    	},
-	"permissions":["activeTab","tabs","notifications","cookies","alarms","storage","webNavigation","webRequest","webRequestBlocking","*://*.twitch.tv/*"],
+	"permissions":["activeTab","tabs","storage","webNavigation","*://*.twitch.tv/*"],
 	"web_accessible_resources":["JS/*.js","IMG/*.png","IMG/*.svg","HTML/*.css"],
 	"description": "TTV AdEraser aims to remove livestream ads as well as add some useful features to our favourite streaming site.",
 	"content_security_policy": "script-src 'self'; object-src 'self'"
