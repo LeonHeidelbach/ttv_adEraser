@@ -272,3 +272,11 @@ function getExtDir(callback){
 	if (callback !== undefined) callback(extPath);
 	else return extPath;
 }
+
+// get url parameter object
+
+function getUrlparams(url){
+    var getParam = {};
+    url.search.substr(1).split("&").forEach(function(item){getParam[item.split("=")[0]] = item.split("=")[1]})
+    return getParam;
+}

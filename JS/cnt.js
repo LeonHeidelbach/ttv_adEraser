@@ -133,6 +133,7 @@ async function addPeekPlayer(urlObj){
 
 // add selected player features to the embedded stream player
 
+var miniPlayerOverlayNonce;
 async function ttvPlayerSetup(){
 	let frame = this.contentWindow.document;
 	this.style.visibility = "";
@@ -149,6 +150,63 @@ async function ttvPlayerSetup(){
 			addEventListener('click', function(){handleTwitchPlayerClick(frame)},false);
 		if(userSettings.enable_ttv_vplayer_mousewheel)
 			addEventListener('wheel', function(evt){handleTwitchPlayerScroll(evt,frame)},false);
+	}
+
+	var miniPlayerOverlayNode = document.createElement('div');
+	miniPlayerOverlayNode.setAttribute('id','ttvminiplayergui');
+	miniPlayerOverlayNode.setAttribute('style','display: none;');
+	miniPlayerOverlayNode.setAttribute('data-playing','true');
+	miniPlayerOverlayNode.innerHTML = `<div class="tw-flex-shrink-0" style="float:right"><button class="tw-align-items-center tw-align-middle tw-border-bottom-left-radius-medium tw-border-bottom-right-radius-medium tw-border-top-left-radius-medium tw-border-top-right-radius-medium tw-button-icon tw-button-icon--overlay tw-core-button tw-core-button--overlay tw-inline-flex tw-interactive tw-justify-content-center tw-overflow-hidden tw-relative" aria-label="Dismiss Mini Player"><span class="tw-button-icon__icon"><div style="width: 2rem; height: 2rem;"><div class="ScIconLayout-sc-1bgeryd-0 kbOjdP tw-icon"><div class="ScAspectRatio-sc-1sw3lwy-1 dNNaBC tw-aspect"><div class="ScAspectSpacer-sc-1sw3lwy-0 gkBhyN"></div><svg width="100%" height="100%" version="1.1" viewBox="0 0 20 20" x="0px" y="0px" class="ScIconSVG-sc-1bgeryd-1 cMQeyU"><g><path d="M8.5 10L4 5.5 5.5 4 10 8.5 14.5 4 16 5.5 11.5 10l4.5 4.5-1.5 1.5-4.5-4.5L5.5 16 4 14.5 8.5 10z"></path></g></svg></div></div></div></span></button></div>
+								<div class="tw-flex-shrink-0"><button class="tw-align-items-center tw-align-middle tw-border-bottom-left-radius-large tw-border-bottom-right-radius-large tw-border-top-left-radius-large tw-border-top-right-radius-large tw-button-icon tw-button-icon--large tw-button-icon--overlay tw-core-button tw-core-button--large tw-core-button--overlay tw-inline-flex tw-interactive tw-justify-content-center tw-overflow-hidden tw-relative" data-test-selector="mini-overlay-play-pause-button" aria-label="Pause"><span class="tw-button-icon__icon"><div style="width: 2.4rem; height: 2.4rem;"><div class="ScIconLayout-sc-1bgeryd-0 kbOjdP tw-icon"><div class="ScAspectRatio-sc-1sw3lwy-1 dNNaBC tw-aspect"><div class="ScAspectSpacer-sc-1sw3lwy-0 gkBhyN"></div><svg width="100%" height="100%" version="1.1" viewBox="0 0 20 20" x="0px" y="0px" class="ScIconSVG-sc-1bgeryd-1 cMQeyU"><g><path d="M8 3H4v14h4V3zM16 3h-4v14h4V3z"></path></g></svg></div></div></div></span></button></div>
+	`;
+	
+	miniPlayerOverlayNode.querySelectorAll('button')[0].addEventListener('click', () =>{
+		document.getElementById('ttvplayerframe').style.visibility = 'hidden';
+		frame.querySelector('video').pause();
+	});
+
+	miniPlayerOverlayNode.querySelectorAll('button')[1].addEventListener('click', () =>{
+		let playPauseButton = miniPlayerOverlayNode.querySelectorAll('button')[1];
+		with(frame){
+			if (getElementById('ttvminiplayergui').getAttribute('data-playing') === 'false'){
+				querySelector('video').play();
+				getElementById('ttvminiplayergui').setAttribute('data-playing','true');
+				playPauseButton.querySelector('svg').innerHTML = '<g><path d="M8 3H4v14h4V3zM16 3h-4v14h4V3z"></path></g>'
+			}else{
+				querySelector('video').pause();
+				getElementById('ttvminiplayergui').setAttribute('data-playing','false');
+				playPauseButton.querySelector('svg').innerHTML = '<g><path d="M5 17.066V2.934a.5.5 0 01.777-.416L17 10 5.777 17.482A.5.5 0 015 17.066z"></path></g>'
+			}
+		}
+	});
+	
+	insertSiblingNodeAfter(miniPlayerOverlayNode,frame.querySelector('video'));
+
+	this.addEventListener('mouseover', () =>{
+		if(document.getElementById('ttvplayerframe').parentNode.parentNode.className.includes('persistent-player__border--mini')){
+			frame.querySelector('.video-player__default-player').style.display = 'none';
+			miniPlayerOverlayNode.style.display = '';
+		}else{
+			frame.querySelector('.video-player__default-player').style.display = '';
+			miniPlayerOverlayNode.style.display = 'none';
+		}
+	});
+
+	this.addEventListener('mouseleave', () =>{
+		if(document.getElementById('ttvplayerframe').parentNode.parentNode.className.includes('persistent-player__border--mini')){
+			var localNonce = miniPlayerOverlayNonce = new Object();
+			setTimeout(() => {
+				if(localNonce === miniPlayerOverlayNonce)
+					miniPlayerOverlayNode.style.display = 'none';
+			}, 500);
+		}
+	});
+
+	with(frame.querySelector('video')){
+		addEventListener('click', () =>{
+			top.window.location = `https://twitch.tv/${(getUrlparams(frame.location)).channel}`;
+		});
+		style.cursor = 'pointer';
 	}
 	this.removeEventListener('load',ttvPlayerSetup,false);
 }
