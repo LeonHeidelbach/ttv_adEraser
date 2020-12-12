@@ -321,7 +321,7 @@ function twitchAdBlock(){
 
 function twitchUrlObj(url){
 	let blockedTWKeywords = ['directory','create'];
-	let twitchUrlPattern = new RegExp(/.*\/\/(www\.)?(twitch\.tv)\/(?<content_type>[a-zA-Z0-9]+)(?:\/)?(?<video_id>[0-9]+)?(?=\/)?/, 'gmi');
+	let twitchUrlPattern = new RegExp(/.*\/\/(www\.)?(twitch\.tv)\/(?<content_type>[a-zA-Z0-9\$\-\_\.\+\!\*'\(\)\,]+)(?:\/)?(?<video_id>[0-9]+)?(?=\/)?/, 'gmi');
 	let urlObj = twitchUrlPattern.exec(url)?.groups;
 	let urlReturnObj = {};
 	if (urlObj === null || blockedTWKeywords.includes(urlObj?.content_type)) return false;
