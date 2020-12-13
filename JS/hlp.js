@@ -267,8 +267,8 @@ function awaitHtmlElement(selector,timeOut,callback){
 
 // get the extensions absolut install directory
 
-function getExtDir(callback){
-	let extPath = 'chrome-extension://' + chrome.runtime.id;
+function getExtDir(filePath,callback){
+	let extPath = chrome.runtime.getURL(filePath);
 	if (callback !== undefined) callback(extPath);
 	else return extPath;
 }

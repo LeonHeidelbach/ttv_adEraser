@@ -69,6 +69,18 @@ async function awaitTwitchPlayer(){
 	});
 }
 
+
+// show/hide channel info card on fullscreen state change
+
+["", "webkit", "moz", "ms"].forEach(
+    type => document.addEventListener(type + "fullscreenchange", () => {
+		let frame = document.getElementById('ttvplayerframe').contentWindow.document;
+		if (document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement)
+			frame.querySelector(".tw-card").style.display = '';
+		else frame.querySelector(".tw-card").style.display = 'none';
+	}, false)
+);
+
 // prepare the side bar to spawn the peek player when hovering over a channel icon
 
 var peekPlayerNonce;
@@ -109,7 +121,7 @@ async function addPeekPlayer(urlObj){
 	let frameURL = `https://player.twitch.tv/?${urlObj.contentType}=${urlObj.contentId}&parent=www.twitch.tv&quality=chunked`;
 	frameWrapper.setAttribute('style',`background-color: #000000; width: ${playerHeight*16/9}px; height: ${playerHeight}px; margin: 0 0 5px 0;`);
 	frameWrapper.innerHTML = `<iframe id='ttvpeekplayerframe' class='video-player' src='${frameURL}' data-a-target='video-player' data-a-player-type='site' data-test-selector='video-player__video-layout' data-theaterMode='false' data-listening='false' allowfullscreen='false' allow='autoplay' style="width: 100%; display: none; width: ${playerHeight*16/9}px; height: ${playerHeight}px;"></iframe>
-							  <img id="ttv_adEraser_loading" src="${getExtDir()}/IMG/ExtIcon-16.png" style="position: absolute; top: 18px; left: 32px;">
+							  <img id="ttv_adEraser_loading" src="${getExtDir('/IMG/ExtIcon-16.png')}" style="position: absolute; top: 18px; left: 32px;">
 	`;
 	if (element !== null){
 		if(document.getElementById('ttvpeekplayerframe') === null)
@@ -154,14 +166,14 @@ async function ttvPlayerSetup(){
 
 	var miniPlayerOverlayNode = document.createElement('div');
 	miniPlayerOverlayNode.setAttribute('id','ttvminiplayergui');
-	miniPlayerOverlayNode.setAttribute('style','display: none;');
+	miniPlayerOverlayNode.setAttribute('style','transition: all 200ms ease-in-out; opacity: 0;');
 	miniPlayerOverlayNode.setAttribute('data-playing','true');
 	miniPlayerOverlayNode.innerHTML = `<div class="tw-flex-shrink-0" style="float:right"><button class="tw-align-items-center tw-align-middle tw-border-bottom-left-radius-medium tw-border-bottom-right-radius-medium tw-border-top-left-radius-medium tw-border-top-right-radius-medium tw-button-icon tw-button-icon--overlay tw-core-button tw-core-button--overlay tw-inline-flex tw-interactive tw-justify-content-center tw-overflow-hidden tw-relative" aria-label="Dismiss Mini Player"><span class="tw-button-icon__icon"><div style="width: 2rem; height: 2rem;"><div class="ScIconLayout-sc-1bgeryd-0 kbOjdP tw-icon"><div class="ScAspectRatio-sc-1sw3lwy-1 dNNaBC tw-aspect"><div class="ScAspectSpacer-sc-1sw3lwy-0 gkBhyN"></div><svg width="100%" height="100%" version="1.1" viewBox="0 0 20 20" x="0px" y="0px" class="ScIconSVG-sc-1bgeryd-1 cMQeyU"><g><path d="M8.5 10L4 5.5 5.5 4 10 8.5 14.5 4 16 5.5 11.5 10l4.5 4.5-1.5 1.5-4.5-4.5L5.5 16 4 14.5 8.5 10z"></path></g></svg></div></div></div></span></button></div>
 								<div class="tw-flex-shrink-0"><button class="tw-align-items-center tw-align-middle tw-border-bottom-left-radius-large tw-border-bottom-right-radius-large tw-border-top-left-radius-large tw-border-top-right-radius-large tw-button-icon tw-button-icon--large tw-button-icon--overlay tw-core-button tw-core-button--large tw-core-button--overlay tw-inline-flex tw-interactive tw-justify-content-center tw-overflow-hidden tw-relative" data-test-selector="mini-overlay-play-pause-button" aria-label="Pause"><span class="tw-button-icon__icon"><div style="width: 2.4rem; height: 2.4rem;"><div class="ScIconLayout-sc-1bgeryd-0 kbOjdP tw-icon"><div class="ScAspectRatio-sc-1sw3lwy-1 dNNaBC tw-aspect"><div class="ScAspectSpacer-sc-1sw3lwy-0 gkBhyN"></div><svg width="100%" height="100%" version="1.1" viewBox="0 0 20 20" x="0px" y="0px" class="ScIconSVG-sc-1bgeryd-1 cMQeyU"><g><path d="M8 3H4v14h4V3zM16 3h-4v14h4V3z"></path></g></svg></div></div></div></span></button></div>
 	`;
 	
 	miniPlayerOverlayNode.querySelectorAll('button')[0].addEventListener('click', () =>{
-		document.getElementById('ttvplayerframe').style.visibility = 'hidden';
+		document.getElementById('ttvplayerframe').setAttribute('style','visibilty: hidden; opacity: 0;');
 		frame.querySelector('video').pause();
 	});
 
@@ -184,10 +196,13 @@ async function ttvPlayerSetup(){
 
 	this.addEventListener('mouseover', () =>{
 		if(document.getElementById('ttvplayerframe').parentNode.parentNode.className.includes('persistent-player__border--mini')){
+			miniPlayerOverlayNonce = new Object();
 			frame.querySelector('.video-player__default-player').style.display = 'none';
 			miniPlayerOverlayNode.style.display = '';
+			miniPlayerOverlayNode.style.opacity = '1';
 		}else{
 			frame.querySelector('.video-player__default-player').style.display = '';
+			miniPlayerOverlayNode.style.opacity = '0';
 			miniPlayerOverlayNode.style.display = 'none';
 		}
 	});
@@ -197,7 +212,7 @@ async function ttvPlayerSetup(){
 			var localNonce = miniPlayerOverlayNonce = new Object();
 			setTimeout(() => {
 				if(localNonce === miniPlayerOverlayNonce)
-					miniPlayerOverlayNode.style.display = 'none';
+					miniPlayerOverlayNode.style.opacity = '0';
 			}, 500);
 		}
 	});
@@ -230,9 +245,11 @@ function ttvTheaterMode(frame){
 		with(ttvplayerframe){
 			if(getAttribute('data-theaterMode') === 'false'){
 				setAttribute('data-theaterMode','true');
+				frame.querySelector(".tw-card").style.display = '';
 				parentElement.classList.remove('video-player__container--resize-calc');
 			}else{
 				setAttribute('data-theaterMode','false');
+				frame.querySelector(".tw-card").style.display = 'none';
 				parentElement.classList.add('video-player__container--resize-calc');
 			}
 		}
@@ -360,9 +377,10 @@ async function changePlayerHeadline(element){
 	reloadElement.setAttribute('style','display:inline-block; cursor:pointer; padding: 0 6px 0 6px; margin: 0 0 0 10px; background-color: #00b52d; border-radius: 20em; font-size: 14pt; vertical-align: middle');
 	liveElement.style.backgroundColor = "#9147ff";
 	liveElementText.innerText = "LIVE & Ad-Free 🔴";
+
+	element.querySelector(".tw-card").style.display = 'none';
 	removeHTMLElement(element.querySelector('[data-a-target="player-twitch-logo-button"]'));
 	removeHTMLElement(element.querySelector(".stream-info-social-panel"));
-	removeHTMLElement(element.querySelector(".tw-card"));
 }
 
 // handle scroll events on the embed player to change the stream volume
