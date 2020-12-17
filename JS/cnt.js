@@ -195,7 +195,6 @@ async function ttvPlayerSetup(){
 	try{
 		addiFrameMessageListener(ttvplayerframe);
 		ttvplayerframe.contentWindow.postMessage(`localStorage.setItem('auto-quality-forced-v2','false');`,'https://player.twitch.tv');
-		
 		await updateUserSettings();
 		let userSettings = settings.userSettings;
 		changePlayerHeadline(frame);
@@ -546,25 +545,16 @@ function twitchUrlObj(url){
 // change the text of the live indicator on the embed stream and add a reload frame button
 
 async function changePlayerHeadline(element){
-	const sleep = m => new Promise(r => setTimeout(r, m));
-	var startTime = new Date().getTime();
-	var liveElement;
-	var liveElementText;
-	do{
-		await sleep(500);
-		if (startTime + 20000 < new Date().getTime()) break;
-		liveElement = element.querySelector(".tw-channel-status-text-indicator--live");
-		if (liveElement === null) continue;
-		liveElementText = liveElement.querySelector("p");
-	}while(liveElement === null || liveElementText === null)
-	if (liveElement === null || liveElementText === null) return;
+	await awaitHtmlElement(element,'.tw-channel-status-text-indicator p','inf');
+	var liveElement = element.querySelector('.tw-channel-status-text-indicator');
+	var liveElementText = element.querySelector('.tw-channel-status-text-indicator p');
 	let reloadElement = liveElement.parentNode.appendChild(document.createElement('div'));
 	reloadElement.addEventListener('click', function(){changeTwitchIframeLocation({tabId:'reload'})}, false);
 	reloadElement.innerText = '♻';
 	reloadElement.title = 'Click to reload video player';
 	reloadElement.setAttribute('style','display:inline-block; cursor:pointer; padding: 0 6px 0 6px; margin: 0 0 0 10px; background-color: #00b52d; border-radius: 20em; font-size: 14pt; vertical-align: middle');
 	liveElement.style.backgroundColor = "#9147ff";
-	liveElementText.innerText = "LIVE & Ad-Free 🔴";
+	liveElementText.innerText = (liveElementText.innerText === 'LIVE' ? 'LIVE & Ad-Free 🔴' : liveElementText.innerText);
 
 	element.querySelector(".tw-card").style.display = 'none';
 	removeHTMLElement(element.querySelector('[data-a-target="player-twitch-logo-button"]'));
