@@ -209,8 +209,8 @@ function mergeNestedObjs(baseObj,updateObj){
 
 // enable/disable loading indicator
 
-async function loadingIndicator(enabled,element){
-	if(element === undefined)
+async function loadingIndicator(enabled,element,style){
+    if(element === undefined)
 		element = document.body;
 	if(enabled){
         let loading = `
@@ -224,7 +224,7 @@ async function loadingIndicator(enabled,element){
 		let barrier = element.appendChild(document.createElement('div'));
 		barrier.setAttribute('id','ldb');
         barrier.setAttribute('class','centered loadingBarrier');
-        barrier.setAttribute('style','left: 45%; top: 55%;');
+        if (style !== undefined) barrier.setAttribute('style',style);
         barrier.innerHTML = loading;
     }else{
         removeHTMLElement(document.getElementById('ldb'));
@@ -233,7 +233,7 @@ async function loadingIndicator(enabled,element){
 
 // method to wait for one or multiple html elements by selector (accepts selector arrays and strings)
 
-function awaitHtmlElement(selector,timeOut,callback){
+function awaitHtmlElement(context,selector,timeOut,callback,waitToDissapear=false){
 	if (timeOut !== undefined && timeOut !== 'inf')
 		var timeStamp = new Date().getTime();
 	return new Promise((resolve, reject) => {
@@ -247,22 +247,72 @@ function awaitHtmlElement(selector,timeOut,callback){
 				}			
 			}
 			if(Array.isArray(selector)){
-				while(document.querySelector(selector[0]) !== null && selector.length > 0)
+				while(!waitToDissapear && context.querySelector(selector[0]) !== null && selector.length > 0 || waitToDissapear && context.querySelector(selector[0]) === null && selector.length > 0)
 					selector.shift();
 				if(selector.length > 0) return;
-			}else
-				if(document.querySelector(selector) === null) return;
+            }else
+				if(!waitToDissapear && context.querySelector(selector) === null || waitToDissapear && context.querySelector(selector) !== null) return;
 			if (callback !== undefined) callback();
 			observer.disconnect();
 			resolve(true);
 		})
-		.observe(document.documentElement, {
+		.observe(context.documentElement, {
 			childList: true
 			, subtree: true
 			, attributes: false
 			, characterData: false
 		});
 	});
+}
+
+// differnt time methods contained within a class - we currently only need a countdown
+
+class Time {
+    countDown(seconds,element,callback){
+        const self = this;
+        const localNonce = this.countDownNonce = new Object();
+        element.innerText = seconds;
+
+        let elementValue = parseInt(element.innerText);
+
+        var countDownTimer = setInterval(async() => {await countDownTimerSeconds();}, 1000);
+        
+        async function countDownTimerSeconds(){
+            if(localNonce !== self.countDownNonce || element === null){
+                clearInterval(countDownTimer);
+                return;
+            }
+            if(!isNaN(elementValue) && elementValue > 0){
+                element.innerText = elementValue - 1;
+                elementValue = parseInt(element.innerText);
+            }else{
+                clearInterval(countDownTimer);
+                if(elementValue === 0 && callback !== undefined) callback();
+                return;
+            }
+        }
+    }
+}
+
+// create a dynamic script execution endpoint inside of an iframe
+
+function addiFrameMessageListener(frame,frameOrigin='https://www.twitch.tv'){
+	if(frame.contentWindow.document.querySelector('#ttv_adEraser_messenger') !== null) return;
+	let iFrameMessageListener = document.createElement('script');
+	iFrameMessageListener.setAttribute('id','ttv_adEraser_messenger');
+	iFrameMessageListener.setAttribute('charset','utf-8');
+	iFrameMessageListener.innerHTML = `
+		function evaluateMessage(evt){
+			if (evt.origin === '${frameOrigin}') {
+				execScript = document.createElement('script');
+				execScript.innerHTML = evt.data;
+				document.head.appendChild(execScript);
+				execScript && execScript.parentNode && execScript.parentNode.removeChild(execScript);
+			}
+		}
+		window.addEventListener('message', evaluateMessage, false);
+	`;
+	frame.contentWindow.document.head.appendChild(iFrameMessageListener);
 }
 
 // get the extensions absolut install directory

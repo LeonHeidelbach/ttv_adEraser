@@ -1,4 +1,9 @@
 {
+	"browser_specific_settings": {
+		"gecko": {
+		  "id": "lhdb.dev@gmail.com"
+		}
+	},
 	"name":"TTV AdEraser",
 	"version":"1.0",
 	"manifest_version":2,
