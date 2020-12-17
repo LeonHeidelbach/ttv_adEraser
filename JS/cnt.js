@@ -181,7 +181,9 @@ async function addPeekPlayer(urlObj){
 async function ttvPlayerSetup(){
 	let frame;
 	await awaitHtmlElement(document,'#ttvplayerframe','inf');
-	try{frame = document.getElementById('ttvplayerframe').contentWindow.document;
+	try{
+		frame = document.querySelector('#ttvplayerframe').contentWindow.document;
+		ttvplayerframe = document.querySelector('#ttvplayerframe');
 	}catch(e){
 		if(e.name === 'SecurityError')
 			setTimeout(() => {
@@ -190,24 +192,29 @@ async function ttvPlayerSetup(){
 		return;
 	}
 	playerErrorNonce = new Object();
-	addiFrameMessageListener(ttvplayerframe);
-	ttvplayerframe.contentWindow.postMessage(`localStorage.setItem('auto-quality-forced-v2','false');`,'https://player.twitch.tv');
-	await updateUserSettings();
-	let userSettings = settings.userSettings;
-	changePlayerHeadline(frame);
-	ttvTheaterMode(frame);
-	if (userSettings.enable_ttv_vplayer_pip && 'pictureInPictureEnabled' in document)
-		ttvPipMode(frame);
-	if(userSettings.enable_ttv_vplayer_compressor && !browser.toLowerCase().includes('firefox'))
-		ttvAudioCompressor(frame);
-	ttvPlayerErrorHandler(frame);
-	with (frame.querySelector(".click-handler")){
-		if(userSettings.enable_ttv_vplayer_click_play_pause)
-			addEventListener('click', function(){handleTwitchPlayerClick(frame)},false);
-		if(userSettings.enable_ttv_vplayer_mousewheel)
-			addEventListener('wheel', function(evt){handleTwitchPlayerScroll(evt,frame)},false);
+	try{
+		addiFrameMessageListener(ttvplayerframe);
+		ttvplayerframe.contentWindow.postMessage(`localStorage.setItem('auto-quality-forced-v2','false');`,'https://player.twitch.tv');
+		
+		await updateUserSettings();
+		let userSettings = settings.userSettings;
+		changePlayerHeadline(frame);
+		ttvTheaterMode(frame);
+		if (userSettings.enable_ttv_vplayer_pip && 'pictureInPictureEnabled' in document)
+			ttvPipMode(frame);
+		if(userSettings.enable_ttv_vplayer_compressor && !browser.toLowerCase().includes('firefox'))
+			ttvAudioCompressor(frame);
+		ttvPlayerErrorHandler(frame);
+		with (frame.querySelector(".click-handler")){
+			if(userSettings.enable_ttv_vplayer_click_play_pause)
+				addEventListener('click', function(){handleTwitchPlayerClick(frame)},false);
+			if(userSettings.enable_ttv_vplayer_mousewheel)
+				addEventListener('wheel', function(evt){handleTwitchPlayerScroll(evt,frame)},false);
+		}
+		miniPlayerSetup(frame);
+	}catch(e){
+		console.log(`TTV_AdEraser_ERROR: ${e.name} - ${e.message} | Line: ${e.lineNumber}`);
 	}
-	miniPlayerSetup(frame)
 	
 	this.style.visibility = "";
 	loadingIndicator(false);
