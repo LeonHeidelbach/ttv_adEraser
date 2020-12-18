@@ -97,6 +97,17 @@ var ttv_adEraser_hub = `
 					<div class="table body" style="display: block; max-height: 100px; width:102.5%; overflow-y: scroll;">
 						<div>
 							<div style="padding: 10px 0 10px 7px;">
+								<span style="color: #ffffff; font-size: 9pt;">Show mini ad player when an ad break starts and hide it when it is over.</span>
+							</div>
+							<div style="padding: 0 0 0 15px">
+								<label class="switch" style="float:right;">
+									<input id="enable_ttv_miniAdPlayer" type="checkbox">
+									<span></span>
+								</label>
+							</div>
+						</div>
+						<div>
+							<div style="padding: 10px 0 10px 7px;">
 								<span style="color: #ffffff; font-size: 9pt;">Use the mouse wheel on the video player to change the volume.</span>
 							</div>
 							<div style="padding: 0 0 0 15px">
@@ -119,7 +130,7 @@ var ttv_adEraser_hub = `
 						</div>
 						<div>
 							<div style="padding: 10px 0 10px 7px;">
-								<span style="color: #ffffff; font-size: 9pt;">Show audio compressor toggle in video player.</span>
+								<span style="color: #ffffff; font-size: 9pt;">Show audio compressor toggle in video player. ${(browser.toLowerCase().includes('firefox') ? '<span style="color: #9147ff">(chromium browsers only)</span>' : '')}</span>
 							</div>
 							<div style="padding: 0">
 								<label class="switch" style="float:right;">
@@ -130,7 +141,7 @@ var ttv_adEraser_hub = `
 						</div>
 						<div>
 							<div style="padding: 10px 0 10px 7px;">
-								<span style="color: #ffffff; font-size: 9pt;">Show picture in picture mode toggle in video player.</span>
+								<span style="color: #ffffff; font-size: 9pt;">Show picture in picture mode toggle in video player. ${(browser.toLowerCase().includes('firefox') ? '<span style="color: #9147ff">(chromium browsers only)</span>' : '')}</span>
 							</div>
 							<div style="padding: 0">
 								<label class="switch" style="float:right;">

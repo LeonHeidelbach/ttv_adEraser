@@ -12,7 +12,6 @@
 // create a global settings variable
 
 var settings;
-var browser = navigator.userAgent;
 
 // content script injection method
 
@@ -59,6 +58,11 @@ async function updateUserSettings(){
 async function awaitTwitchUi(){
 	awaitHtmlElement(document, '.side-bar-contents', 'inf', () =>{
 		peekPlayerPrepper();
+		document.querySelector('[data-a-target="side-nav-arrow"]').addEventListener('click', () =>{
+			let ttvminiplayerframe = document.querySelector('#ttv_adEraser_miniAdPlayer');
+			if(ttvminiplayerframe !== null)
+				ttvminiplayerframe.style.left = getSideNavBarState(true);
+		},false);
 	});
 }
 
@@ -95,6 +99,12 @@ function ttvAdEraserStyleInsert(){
 	ttv_adEraser_style.setAttribute('rel','stylesheet');
 	ttv_adEraser_style.setAttribute('href',getExtDir('/HTML/main.css'));
 	document.head.appendChild(ttv_adEraser_style);
+}
+
+// get collapse state of the twitch ui side bar and return mini player style.left value
+
+function getSideNavBarState(reverse){
+	return (document.querySelector('[data-test-selector="side-nav"]').getAttribute('data-a-target') === 'side-nav-bar-collapsed' ? (reverse ? '240px' : '50px') : (reverse ? '50px' : '240px'));
 }
 
 // prepare the side bar to spawn the peek player when hovering over a channel icon
@@ -181,9 +191,9 @@ async function addPeekPlayer(urlObj){
 async function ttvPlayerSetup(){
 	let frame;
 	await awaitHtmlElement(document,'#ttvplayerframe','inf');
+	let ttvplayerframe = document.querySelector('#ttvplayerframe');
 	try{
 		frame = document.querySelector('#ttvplayerframe').contentWindow.document;
-		ttvplayerframe = document.querySelector('#ttvplayerframe');
 	}catch(e){
 		if(e.name === 'SecurityError')
 			setTimeout(() => {
@@ -215,9 +225,9 @@ async function ttvPlayerSetup(){
 		console.log(`TTV_AdEraser_ERROR: ${e.name} - ${e.message} | Line: ${e.lineNumber}`);
 	}
 	
-	this.style.visibility = "";
+	ttvplayerframe.style.visibility = "";
 	loadingIndicator(false);
-	this.removeEventListener('load',ttvPlayerSetup,false);
+	ttvplayerframe.removeEventListener('load',ttvPlayerSetup,false);
 }
 
 // mini player setup when clicking out of a stream
@@ -282,7 +292,9 @@ function miniPlayerSetup(frame){
 
 	with(frame.querySelector('video')){
 		addEventListener('click', () =>{
-			top.window.location = `https://twitch.tv/${(getUrlparams(frame.location)).channel}`;
+			if(document.querySelector('[aria-label="Expand Player"]') !== null)
+				document.querySelector('[aria-label="Expand Player"]').click();
+			else top.window.location = `https://twitch.tv/${(getUrlparams(frame.location)).channel}`;
 		});
 		style.cursor = 'pointer';
 	}
@@ -307,14 +319,14 @@ function prepAdPlayer(realPlayerNode){
 		with(miniAdPlayer){
 			setAttribute('id','ttv_adEraser_miniAdPlayer');
 			setAttribute('class','persistent-player persistent-player__border--mini persistent-player__border--mini tw-elevation-5 tw-overflow-hidden');
-			setAttribute('style','transition: all 200ms ease-in-out; left: 50px; position: fixed; z-index: 1000; height: 15.75rem; width: 28rem; bottom: -100%; margin: 1rem;');
+			setAttribute('style',`transition: all 200ms ease-in-out; left: ${getSideNavBarState()}; position: fixed; z-index: 1000; height: 15.75rem; width: 28rem; bottom: -100%; margin: 1rem;`);
 			setAttribute('data-ad-playing','false');
 		}
 
 		document.body.appendChild(miniAdPlayer);
-		// document.querySelector('#ttv_adEraser_miniAdPlayer').firstChild.appendChild(realPlayerNode);
-		document.querySelector('#ttv_adEraser_miniAdPlayer').firstChild.appendChild(miniAdPlayerOverlayNode);
-		removeHTMLElement(document.querySelector('[data-test-selector="settings-menu-button__animate-wrapper"]'));
+		// This overlay is currently not in use
+		// document.querySelector('#ttv_adEraser_miniAdPlayer').appendChild(miniAdPlayerOverlayNode);
+		removeHTMLElement(document.querySelector('.player-controls__right-control-group'));
 
 		frame.addEventListener('mouseover', () =>{
 			if(miniAdPlayer.getAttribute('data-ad-playing') === 'true')
@@ -327,30 +339,36 @@ function prepAdPlayer(realPlayerNode){
 			else miniAdPlayer.style.bottom = '-100%';
 		}, false);
 
-		with(document.querySelector('#ttv_adEraser_miniAdPlayerGui')){
-			addEventListener('mouseover', () =>{
-				miniAdPlayerOverlayNonce = new Object();
-				miniAdPlayerOverlayNode.style.opacity = '1';
-			});
+		// This overlay is currently not in use
 
-			addEventListener('mouseleave', () =>{
-				var localNonce = miniAdPlayerOverlayNonce = new Object();
-				setTimeout(() => {
-					if(localNonce === miniAdPlayerOverlayNonce)
-						miniAdPlayerOverlayNode.style.opacity = '0';
-				}, 500);
-			});
+		// with(document.querySelector('#ttv_adEraser_miniAdPlayerGui')){
+		// 	addEventListener('mouseover', () =>{
+		// 		miniAdPlayerOverlayNonce = new Object();
+		// 		miniAdPlayerOverlayNode.style.opacity = '1';
+		// 	});
 
-			addEventListener('wheel', function(evt){handleTwitchPlayerScroll(evt,document.querySelector('#ttv_adEraser_miniAdPlayer'))}, false);
+		// 	addEventListener('mouseleave', () =>{
+		// 		var localNonce = miniAdPlayerOverlayNonce = new Object();
+		// 		setTimeout(() => {
+		// 			if(localNonce === miniAdPlayerOverlayNonce)
+		// 				miniAdPlayerOverlayNode.style.opacity = '0';
+		// 		}, 500);
+		// 	});
 
-			firstElementChild.addEventListener('click', () => {
-				miniAdPlayer.style.display = 'none';
-			},false);
-		}
+		// 	firstElementChild.addEventListener('click', () => {
+		// 		miniAdPlayer.style.display = 'none';
+		// 	},false);
+		// }
 
-		function adHandler(){
+		document.querySelector('[data-a-target="player-overlay-click-handler"]').addEventListener('wheel', function(evt){handleTwitchPlayerScroll(evt,document.querySelector('#ttv_adEraser_miniAdPlayer'))}, false);
+
+		async function adHandler(){
+			await updateUserSettings();
+			let userSettings = settings.userSettings;
+
+			miniAdPlayer.style.left = getSideNavBarState();
 			miniAdPlayer.setAttribute('data-ad-playing','true');
-			miniAdPlayer.style.bottom = '0px';
+			if(userSettings.enable_ttv_miniAdPlayer) miniAdPlayer.style.bottom = '0px';
 			awaitHtmlElement(document,'[data-test-selector="ad-banner-default-text"]','inf',() =>{
 				miniAdPlayer.style.bottom = '-100%';
 				miniAdPlayer.setAttribute('data-ad-playing','false');
@@ -360,6 +378,9 @@ function prepAdPlayer(realPlayerNode){
 		}
 
 		awaitHtmlElement(document,'[data-test-selector="ad-banner-default-text"]','inf', adHandler);
+		awaitHtmlElement(document,'#ttv_adEraser_miniAdPlayer','inf', ()=>{
+			document.querySelector('#ttv_adEraser_miniAdPlayer').setAttribute('class','persistent-player persistent-player__border--mini persistent-player__border--mini tw-elevation-5 tw-overflow-hidden');
+		},false,false);
 	}
 }
 
@@ -368,16 +389,17 @@ function prepAdPlayer(realPlayerNode){
 let playerErrorNonce;
 async function ttvPlayerErrorHandler(frameContent){
 	var frame = document.getElementById('ttvplayerframe');
+	var frameLocation = document.getElementById('ttvplayerframe').src;
 	awaitHtmlElement(frameContent, '[data-test-selector="content-overlay-gate__text"]','inf',()=>{
 		var localNonce = playerErrorNonce = new Object();
 		var errorNode = frameContent.querySelector('[data-test-selector="content-overlay-gate__text"]');
 		let errorCountDown = new Time();
+		if(!errorNode.innerText.includes('#')) return;
 		errorNode.innerHTML = `
 			<img style="display:inline-block; margin: 0 0 20px 0;" src=${getExtDir('/IMG/ExtIcon-48.png')}>
-			<span style="display:block; margin: 0 0 20px 0;">TTV adEraser has detected a player error and will reload the player automatically in a 1 second interval as long as this error persists.</span>
+			<span style="display:block; margin: 0 0 20px 0;">TTV adEraser has detected a player error and will reload the player automatically in a 2 second interval as long as this error persists.</span>
 			<span style="display:block; margin: 0 0 20px 0;"><span style="color:#a8324a">Twitch-ERROR:</span> ${errorNode.innerText}</span>
 			<button class="tw-align-items-center tw-align-middle tw-border-bottom-left-radius-medium tw-border-bottom-right-radius-medium tw-border-top-left-radius-medium tw-border-top-right-radius-medium tw-core-button tw-core-button--primary tw-inline-flex tw-interactive tw-justify-content-center tw-overflow-hidden tw-relative" data-a-target="chat-send-button"><div class="tw-align-items-center tw-core-button-label tw-flex tw-flex-grow-0"><div data-a-target="tw-core-button-label-text" class="tw-flex-grow-0">Stop Player Reload in <span id="ttv_adEraser_countDown">5</span> sec.</div></div></button>
-		
 		`
 		errorNode.querySelector('button').addEventListener('click', () =>{
 			playerErrorNonce = false;
@@ -385,7 +407,7 @@ async function ttvPlayerErrorHandler(frameContent){
 			removeHTMLElement(errorNode.querySelector('button'));
 		},false);
 		
-		frame.addEventListener('load', ttvPlayerSetup,false);
+		
 		errorCountDown.countDown(5,errorNode.querySelector('#ttv_adEraser_countDown'), () => {
 			if(!playerErrorNonce){
 				errorNode.setAttribute('data-test-selector','content-overlay-gate__text__aborted');
@@ -398,12 +420,14 @@ async function ttvPlayerErrorHandler(frameContent){
 			var playerReload = setInterval(() => {
 				if (frameContent.readyState === 'complete')
 					if (localNonce === playerErrorNonce){
-						frame.contentWindow.location.reload();
+						try{frame.contentWindow.location.replace(frameLocation);}
+						catch(e){}
+						finally{frame.addEventListener('load', ttvPlayerSetup,false);}
 					}else{
 						ttvPlayerErrorHandler(frameContent);
 						clearInterval(playerReload);
 					}
-			}, 1000);
+			}, 2000);
 		});
 	})
 }
@@ -548,11 +572,14 @@ async function changePlayerHeadline(element){
 	await awaitHtmlElement(element,'.tw-channel-status-text-indicator p','inf');
 	var liveElement = element.querySelector('.tw-channel-status-text-indicator');
 	var liveElementText = element.querySelector('.tw-channel-status-text-indicator p');
-	let reloadElement = liveElement.parentNode.appendChild(document.createElement('div'));
-	reloadElement.addEventListener('click', function(){changeTwitchIframeLocation({tabId:'reload'})}, false);
-	reloadElement.innerText = '♻';
-	reloadElement.title = 'Click to reload video player';
-	reloadElement.setAttribute('style','display:inline-block; cursor:pointer; padding: 0 6px 0 6px; margin: 0 0 0 10px; background-color: #00b52d; border-radius: 20em; font-size: 14pt; vertical-align: middle');
+	if (element.querySelector('[data-a-target="ttv_adEraser_frameReload"]') === null){
+		let reloadElement = liveElement.parentNode.appendChild(document.createElement('div'));
+		reloadElement.addEventListener('click', function(){changeTwitchIframeLocation({tabId:'reload'})}, false);
+		reloadElement.innerText = '♻';
+		reloadElement.title = 'Click to reload video player';
+		reloadElement.setAttribute('data-a-target','ttv_adEraser_frameReload');
+		reloadElement.setAttribute('style','display:inline-block; cursor:pointer; padding: 0 6px 0 6px; margin: 0 0 0 10px; background-color: #00b52d; border-radius: 20em; font-size: 14pt; vertical-align: middle');
+	}
 	liveElement.style.backgroundColor = "#9147ff";
 	liveElementText.innerText = (liveElementText.innerText === 'LIVE' ? 'LIVE & Ad-Free 🔴' : liveElementText.innerText);
 
@@ -607,6 +634,8 @@ function ttvPipMode(frame){
 	const pip_off = 'M22 30c-1.9 1.9-2 3.3-2 34s.1 32.1 2 34c1.9 1.9 3.3 2 42 2s40.1-.1 42-2c1.9-1.9 2-3.3 2-34 0-31.6 0-31.9-2.2-34-2.1-1.9-3.3-2-42-2-38.5 0-39.9.1-41.8 2zm78 34v28H28V36h72v28z';
 	const pip_on = 'M60 72v12h32V60H60v12z';
 	
+	if(frame.querySelector('[data-a-target="player-pip-mode-button"]') !== null) return;
+
 	var anchor = frame.querySelector('[data-a-target="player-theatre-mode-button"]');
 	var pipButton = anchor.parentElement.cloneNode(true);
 	var videoElement = frame.querySelector('video');
@@ -614,25 +643,26 @@ function ttvPipMode(frame){
 	insertSiblingNodeBefore(pipButton, anchor.parentNode);
 	
 	with(pipButton){
-		querySelector(".tw-tooltip").innerText = 'Picture in Picture';
-		querySelector("svg").setAttribute("viewBox", "0 0 128 128");
-		querySelector("svg").setAttribute('transform','scale(1.3)');
-		querySelector("svg").className = 'tw-icon__svg';
-		querySelector("g").innerHTML = `<path d="${pip_off}"></path><path d="${pip_on}"></path>`;
-		setAttribute("data-active", 'false');
+		querySelector('.tw-tooltip').innerText = 'Picture in Picture';
+		querySelector('svg').setAttribute("viewBox", "0 0 128 128");
+		querySelector('svg').setAttribute('transform','scale(1.3)');
+		querySelector('svg').className = 'tw-icon__svg';
+		querySelector('g').innerHTML = `<path d="${pip_off}"></path><path d="${pip_on}"></path>`;
+		querySelector('button').setAttribute('data-a-target','player-pip-mode-button');
+		setAttribute('data-active', 'false');
 	}
 
 	async function enablePip(){
 		const active = pipButton.getAttribute('data-active');
 		function enableElements(){
 			with(pipButton){
-				querySelector("g").lastChild.style.display = 'none';
+				querySelector('g').lastChild.style.display = 'none';
 				setAttribute('data-active', 'true');
 			}
 		}
 		function disableElements(){
 			with(pipButton){
-				querySelector("g").lastChild.style.display = '';
+				querySelector('g').lastChild.style.display = '';
 				setAttribute('data-active', 'false');
 			}
 		}
@@ -658,16 +688,19 @@ function ttvAudioCompressor(frame){
 	const compressor_off = 'M850 202.3C877.7 202.3 900 224.6 900 252.3V745.5C900 773.2 877.7 795.5 850 795.5S800 773.2 800 745.5V252.3C800 224.6 822.3 202.3 850 202.3ZM570 167.8C597.7 167.8 620 190.1 620 217.8V780C620 807.7 597.7 830 570 830S520 807.7 520 780V217.8C520 190.1 542.3 167.8 570 167.8ZM710 264.4C737.7 264.4 760 286.7 760 314.4V683.3C760 711 737.7 733.3 710 733.3S660 711 660 683.3V314.4C660 286.7 682.3 264.4 710 264.4ZM430 98.1C457.7 98.1 480 120.4 480 148.1V849.6C480 877.3 457.7 899.6 430 899.6S380 877.3 380 849.6V148.1C380 120.4 402.3 98.1 430 98.1ZM290 217.2C317.7 217.2 340 239.5 340 267.2V730.5C340 758.2 317.7 780.5 290 780.5S240 758.2 240 730.5V267.2C240 239.5 262.3 217.2 290 217.2ZM150 299.6C177.7 299.6 200 321.9 200 349.6V648.1C200 675.8 177.7 698.1 150 698.1S100 675.8 100 648.1V349.6C100 321.9 122.3 299.6 150 299.6Z';
 	const compressor_on = 'M850 200C877.7 200 900 222.3 900 250V750C900 777.7 877.7 800 850 800S800 777.7 800 750V250C800 222.3 822.3 200 850 200ZM570 250C597.7 250 620 272.3 620 300V700C620 727.7 597.7 750 570 750S520 727.7 520 700V300C520 272.3 542.3 250 570 250ZM710 225C737.7 225 760 247.3 760 275V725C760 752.7 737.7 775 710 775S660 752.7 660 725V275C660 247.3 682.3 225 710 225ZM430 250C457.7 250 480 272.3 480 300V700C480 727.7 457.7 750 430 750S380 727.7 380 700V300C380 272.3 402.3 250 430 250ZM290 225C317.7 225 340 247.3 340 275V725C340 752.7 317.7 775 290 775S240 752.7 240 725V275C240 247.3 262.3 225 290 225ZM150 200C177.7 200 200 222.3 200 250V750C200 777.7 177.7 800 150 800S100 777.7 100 750V250C100 222.3 122.3 200 150 200Z';
 
+	if(frame.querySelector('[data-a-target="player-audio-compressor-mode-button"]') !== null) return;
+
 	let muteButton = frame.querySelector('[data-a-target="player-play-pause-button"]');
 	var compressorButton = muteButton.parentElement.cloneNode(true);
 
 	insertSiblingNodeAfter(compressorButton, muteButton.parentNode);
 
 	with(compressorButton){
-		querySelector(".tw-tooltip").innerText = 'Audio Compressor';
-		querySelector("svg").setAttribute("viewBox", "0 0 1000 1000");
-		querySelector("g").innerHTML = `<path fill-rule="evenodd" d="${compressor_off}" clip-rule="evenodd"></path>`;
-		setAttribute("data-active", 'false');
+		querySelector('.tw-tooltip').innerText = 'Audio Compressor';
+		querySelector('svg').setAttribute("viewBox", "0 0 1000 1000");
+		querySelector('g').innerHTML = `<path fill-rule="evenodd" d="${compressor_off}" clip-rule="evenodd"></path>`;
+		querySelector('button').setAttribute('data-a-target', 'player-audio-compressor-mode-button');
+		setAttribute('data-active', 'false');
 	}
 
 	let video = frame.querySelector('video');

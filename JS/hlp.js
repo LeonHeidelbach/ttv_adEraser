@@ -9,10 +9,14 @@
 //
 //------------------------------------------------------------------------------------------------//
 
+// global varibales
+
+var browser = navigator.userAgent;
+
 // popup settings items
 
 let valueSettingsItems = ['ttv_peek_player_size||240'];
-let booleanSettingsItems = ['enable_ttv_adEraser','enable_ttv_vplayer_settings','enable_ttv_peek_player','enable_ttv_vplayer_mousewheel','enable_ttv_vplayer_click_play_pause','enable_ttv_vplayer_compressor','enable_ttv_vplayer_pip'];
+let booleanSettingsItems = ['enable_ttv_adEraser','enable_ttv_vplayer_settings','enable_ttv_peek_player','enable_ttv_miniAdPlayer','enable_ttv_vplayer_mousewheel','enable_ttv_vplayer_click_play_pause','enable_ttv_vplayer_compressor','enable_ttv_vplayer_pip'];
 
 // retrieve user settings from background and popup script
 
@@ -233,7 +237,7 @@ async function loadingIndicator(enabled,element,style){
 
 // method to wait for one or multiple html elements by selector (accepts selector arrays and strings)
 
-function awaitHtmlElement(context,selector,timeOut,callback,waitToDissapear=false){
+function awaitHtmlElement(context,selector,timeOut,callback,waitToDissapear=false,disconnect=true){
 	if (timeOut !== undefined && timeOut !== 'inf')
 		var timeStamp = new Date().getTime();
 	return new Promise((resolve, reject) => {
@@ -253,7 +257,7 @@ function awaitHtmlElement(context,selector,timeOut,callback,waitToDissapear=fals
             }else
 				if(!waitToDissapear && context.querySelector(selector) === null || waitToDissapear && context.querySelector(selector) !== null) return;
 			if (callback !== undefined) callback();
-			observer.disconnect();
+            if(disconnect) observer.disconnect();
 			resolve(true);
 		})
 		.observe(context.documentElement, {

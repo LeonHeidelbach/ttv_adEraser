@@ -120,6 +120,12 @@ async function ttv_peek_player_size_changed(){
 	await changeUserSetting(this.id,this.value);
 }
 
+// show mini ad player enable/disable switch event handler method
+
+async function enable_ttv_miniAdPlayer_clicked(){
+	await checkBoxValueSwitcher(this.id);
+}
+
 // player volume scroll enable/disable switch event handler method
 
 async function enable_ttv_vplayer_mousewheel_clicked(){
