@@ -69,11 +69,13 @@ async function awaitTwitchUi(){
 // wait for the stream to load, remove ads and add player features
 
 async function awaitTwitchPlayer(){
-	localStorage.setItem('s-qs-ts',new Date().getTime());
-	localStorage.setItem('auto-quality-forced-v2','false');
-	localStorage.setItem('video-muted','{"carousel":false,"default":true}');
-	localStorage.setItem('quality-bitrate','230000');
-	localStorage.setItem('video-quality','{"default":"160p30"}');
+	with(localStorage){
+		setItem('s-qs-ts',new Date().getTime());
+		setItem('auto-quality-forced-v2','false');
+		setItem('video-muted','{"carousel":false,"default":true}');
+		setItem('quality-bitrate','230000');
+		setItem('video-quality','{"default":"160p30"}');
+	}
 	awaitHtmlElement(document, 'video', 'inf', () =>{
 		ttvTheaterButtonMover();
 		twitchAdBlock();
@@ -328,13 +330,19 @@ function prepAdPlayer(realPlayerNode){
 		// document.querySelector('#ttv_adEraser_miniAdPlayer').appendChild(miniAdPlayerOverlayNode);
 		removeHTMLElement(document.querySelector('.player-controls__right-control-group'));
 
-		frame.addEventListener('mouseover', () =>{
-			if(miniAdPlayer.getAttribute('data-ad-playing') === 'true')
+		frame.addEventListener('mouseover', async () =>{
+			await updateUserSettings();
+			let userSettings = settings.userSettings;
+
+			if(miniAdPlayer.getAttribute('data-ad-playing') === 'true' && userSettings.enable_ttv_miniAdPlayer)
 				miniAdPlayer.style.bottom = '-10.75rem';
 			else miniAdPlayer.style.bottom = '-100%';
 		}, false);
-		frame.addEventListener('mouseleave', () =>{ 
-			if(miniAdPlayer.getAttribute('data-ad-playing') === 'true')
+		frame.addEventListener('mouseleave', async () =>{
+			await updateUserSettings();
+			let userSettings = settings.userSettings;
+			
+			if(miniAdPlayer.getAttribute('data-ad-playing') === 'true' && userSettings.enable_ttv_miniAdPlayer)
 				miniAdPlayer.style.bottom = '0px';
 			else miniAdPlayer.style.bottom = '-100%';
 		}, false);
@@ -360,7 +368,7 @@ function prepAdPlayer(realPlayerNode){
 		// 	},false);
 		// }
 
-		document.querySelector('[data-a-target="player-overlay-click-handler"]').addEventListener('wheel', function(evt){handleTwitchPlayerScroll(evt,document.querySelector('#ttv_adEraser_miniAdPlayer'))}, false);
+		document.querySelector('.video-player__default-player').addEventListener('wheel', function(evt){handleTwitchPlayerScroll(evt,document.querySelector('#ttv_adEraser_miniAdPlayer'))}, false);
 
 		async function adHandler(){
 			await updateUserSettings();
@@ -389,25 +397,26 @@ function prepAdPlayer(realPlayerNode){
 let playerErrorNonce;
 async function ttvPlayerErrorHandler(frameContent){
 	var frame = document.getElementById('ttvplayerframe');
-	var frameLocation = document.getElementById('ttvplayerframe').src;
+	var frameLocation = document.getElementById('ttvplayerframe').contentWindow.location.href;
 	awaitHtmlElement(frameContent, '[data-test-selector="content-overlay-gate__text"]','inf',()=>{
 		var localNonce = playerErrorNonce = new Object();
 		var errorNode = frameContent.querySelector('[data-test-selector="content-overlay-gate__text"]');
-		let errorCountDown = new Time();
 		if(!errorNode.innerText.includes('#')) return;
 		errorNode.innerHTML = `
-			<img style="display:inline-block; margin: 0 0 20px 0;" src=${getExtDir('/IMG/ExtIcon-48.png')}>
-			<span style="display:block; margin: 0 0 20px 0;">TTV adEraser has detected a player error and will reload the player automatically in a 2 second interval as long as this error persists.</span>
-			<span style="display:block; margin: 0 0 20px 0;"><span style="color:#a8324a">Twitch-ERROR:</span> ${errorNode.innerText}</span>
-			<button class="tw-align-items-center tw-align-middle tw-border-bottom-left-radius-medium tw-border-bottom-right-radius-medium tw-border-top-left-radius-medium tw-border-top-right-radius-medium tw-core-button tw-core-button--primary tw-inline-flex tw-interactive tw-justify-content-center tw-overflow-hidden tw-relative" data-a-target="chat-send-button"><div class="tw-align-items-center tw-core-button-label tw-flex tw-flex-grow-0"><div data-a-target="tw-core-button-label-text" class="tw-flex-grow-0">Stop Player Reload in <span id="ttv_adEraser_countDown">5</span> sec.</div></div></button>
-		`
+			<div data-test-selector="ttv_adEraser_errReporter">
+				<img style="display:inline-block; margin: 0 0 20px 0;" src=${getExtDir('/IMG/ExtIcon-48.png')}>
+				<span style="display:block; margin: 0 0 20px 0;">TTV adEraser has detected a player error and will reload the player automatically in a 2 second interval as long as this error persists.</span>
+				<span style="display:block; margin: 0 0 20px 0;"><span style="color:#a8324a">Twitch-ERROR:</span> ${errorNode.innerText}</span>
+				<button class="tw-align-items-center tw-align-middle tw-border-bottom-left-radius-medium tw-border-bottom-right-radius-medium tw-border-top-left-radius-medium tw-border-top-right-radius-medium tw-core-button tw-core-button--primary tw-inline-flex tw-interactive tw-justify-content-center tw-overflow-hidden tw-relative" data-a-target="chat-send-button"><div class="tw-align-items-center tw-core-button-label tw-flex tw-flex-grow-0"><div data-a-target="tw-core-button-label-text" class="tw-flex-grow-0">Stop Player Reload in <span id="ttv_adEraser_countDown">5</span> sec.</div></div></button>
+			</div>
+		`;
 		errorNode.querySelector('button').addEventListener('click', () =>{
 			playerErrorNonce = false;
 			errorNode.querySelector('span').innerText = 'The player frame will not be reloaded. However, twitch.tv might still try to reconnect and resume the stream if possible.';
 			removeHTMLElement(errorNode.querySelector('button'));
 		},false);
 		
-		
+		let errorCountDown = new Time();
 		errorCountDown.countDown(5,errorNode.querySelector('#ttv_adEraser_countDown'), () => {
 			if(!playerErrorNonce){
 				errorNode.setAttribute('data-test-selector','content-overlay-gate__text__aborted');
@@ -417,6 +426,7 @@ async function ttvPlayerErrorHandler(frameContent){
 			frame.style.visibility = 'hidden';
 			loadingIndicator(false);
 			loadingIndicator(true,frame.parentNode.parentNode,'transform: translate(-50%,-50%) scale(.5)');
+			removeHTMLElement(frame.querySelector('#ttv_adEraser_errReporter'));
 			var playerReload = setInterval(() => {
 				if (frameContent.readyState === 'complete')
 					if (localNonce === playerErrorNonce){
@@ -516,8 +526,12 @@ function changeTwitchIframeLocation(details){
 			frame.style.visibility = 'hidden';
 			loadingIndicator(true,frame.parentNode.parentNode,'transform: translate(-50%,-50%) scale(.5)');
 			frame.contentWindow.location.reload();
-		}else frame.contentWindow.location.replace(`https://player.twitch.tv/?${urlObj.contentType}=${urlObj.contentId}&parent=www.twitch.tv&quality=${quality}`);
-		// frame.setAttribute('src',`https://player.twitch.tv/?${urlObj.contentType}=${urlObj.contentId}&parent=www.twitch.tv&quality=${quality}`);
+		}else {
+			frame.style.visibility = 'hidden';
+			loadingIndicator(true,frame.parentNode.parentNode,'transform: translate(-50%,-50%) scale(.5)');
+			frame.contentWindow.location.replace(`https://player.twitch.tv/?${urlObj.contentType}=${urlObj.contentId}&parent=www.twitch.tv&quality=${quality}`);
+			// frame.setAttribute('src',`https://player.twitch.tv/?${urlObj.contentType}=${urlObj.contentId}&parent=www.twitch.tv&quality=${quality}`);
+		}
 	});
 }
 
@@ -535,8 +549,6 @@ function twitchAdBlock(){
 		// removeHTMLElement(this);
 		prepAdPlayer(this);
 	});
-	// channelPlayer.style.display = 'none';
-	// document.head.appendChild(channelPlayer.cloneNode(true));
 	channelPlayer.outerHTML = `<iframe id='ttvplayerframe' class='video-player' src='https://player.twitch.tv/?${urlObj.contentType}=${urlObj.contentId}&parent=www.twitch.tv&quality=${quality}' data-a-target='video-player' data-a-player-type='site' data-test-selector='video-player__video-layout' data-theaterMode='false' data-listening='false' allowfullscreen='true' allow='autoplay' style="visibility: hidden"></iframe>`;
 	let ttvplayerframe = document.getElementById('ttvplayerframe');
 	loadingIndicator(true,ttvplayerframe.parentNode.parentNode,'transform: translate(-50%,-50%) scale(.5)');

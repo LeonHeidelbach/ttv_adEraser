@@ -31,13 +31,15 @@ async function applyUserSettings(){
 	});
 	booleanSettingsItems.forEach((id,index) => {
 		let element = document.getElementById(id);
+		let userSettingsValue = true;
 		if (userSettings[id] === undefined){ 
+			if(browser.toLowerCase().includes('firefox') && onlyChromium.includes(id)) userSettingsValue = false;
 			changeUserSetting(id, true);
 			userSettings[id] = true;
 		}
 		element.nextElementSibling.className = 'slider round';
 		element.checked =  userSettings[id];
-		if(userSettings.enable_ttv_adEraser !== undefined && !userSettings.enable_ttv_adEraser && index > 0 || userSettings.enable_ttv_adEraser !== undefined &&  !userSettings.enable_ttv_vplayer_settings && index > 1)
+		if(userSettings.enable_ttv_adEraser !== undefined && !userSettings.enable_ttv_adEraser && index > 0 || userSettings.enable_ttv_adEraser !== undefined &&  !userSettings.enable_ttv_vplayer_settings && index > 1 || browser.toLowerCase().includes('firefox') && onlyChromium.includes(id))
 			element.disabled = true;
 	});
 	const index = booleanSettingsItems.indexOf("enable_ttv_adEraser");

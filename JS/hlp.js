@@ -17,6 +17,7 @@ var browser = navigator.userAgent;
 
 let valueSettingsItems = ['ttv_peek_player_size||240'];
 let booleanSettingsItems = ['enable_ttv_adEraser','enable_ttv_vplayer_settings','enable_ttv_peek_player','enable_ttv_miniAdPlayer','enable_ttv_vplayer_mousewheel','enable_ttv_vplayer_click_play_pause','enable_ttv_vplayer_compressor','enable_ttv_vplayer_pip'];
+let onlyChromium = ['enable_ttv_vplayer_compressor','enable_ttv_vplayer_pip'];
 
 // retrieve user settings from background and popup script
 
@@ -226,12 +227,16 @@ async function loadingIndicator(enabled,element,style){
             </div>
         `
 		let barrier = element.appendChild(document.createElement('div'));
-		barrier.setAttribute('id','ldb');
+		barrier.setAttribute('data-test-selector','ttv_adEraser_loadingBarrier');
         barrier.setAttribute('class','centered loadingBarrier');
         if (style !== undefined) barrier.setAttribute('style',style);
         barrier.innerHTML = loading;
     }else{
-        removeHTMLElement(document.getElementById('ldb'));
+        let indicatorCollection = [];
+        indicatorCollection = Array.prototype.concat.apply(indicatorCollection, document.querySelectorAll('[data-test-selector="ttv_adEraser_loadingBarrier"]'));
+        indicatorCollection.forEach((item) =>{
+            removeHTMLElement(item);
+        });
     }
 }
 
