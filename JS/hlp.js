@@ -339,3 +339,15 @@ function getUrlparams(url){
     url.search.substr(1).split("&").forEach(function(item){getParam[item.split("=")[0]] = item.split("=")[1]})
     return getParam;
 }
+
+// return a string from a byte array
+
+function stringFromArrayBuffer(responseData){
+    let uInt8Array = new Uint8Array(responseData);
+    let i = uInt8Array.length;
+    let binaryString = new Array(i);
+    while (i--) binaryString[i] = String.fromCharCode(uInt8Array[i]);
+    let data = binaryString.join('');
+
+    return data;
+}
