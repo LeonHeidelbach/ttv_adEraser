@@ -354,17 +354,18 @@ function switchMiniAdToEmbedPlayer(tobody=false){
 	let videoPlayer = miniAdPlayer.querySelector('video');
 	
 	if(tobody){
+		videoPlayer.muted = true;
 		changeAdPlayerQuality('160p');
 		miniAdPlayer.setAttribute('class','video-player persistent-player persistent-player__border--mini persistent-player__border--mini tw-elevation-5 tw-overflow-hidden');
 		miniAdPlayer.setAttribute('style','transition: all 200ms ease-in-out; left: ${getSideNavBarState()}; position: fixed; z-index: 1000; height: 15.75rem; width: 28rem; bottom: -100%; margin: 1rem;');
-		videoPlayer.muted = true;
 		document.body.appendChild(miniAdPlayer);
 		removeHTMLElement(document.getElementById('ttv_adEraser_miniAdPlayer_scaler'));
 	}else{
+		videoPlayer.muted = false;
+		videoPlayer.volume = ttvplayerframe.contentWindow.document.querySelector('[data-a-target="player-volume-slider"]').value;
 		changeAdPlayerQuality(localStorage.getItem("ttv_adEraser_embedQuality"));
 		miniAdPlayer.setAttribute('class','video-player tw-absolute tw-bottom-0 tw-left-0 tw-overflow-hidden tw-right-0 tw-top-0 video-player__container video-player__container--resize-calc');
 		miniAdPlayer.removeAttribute('style');
-		videoPlayer.muted = false;
 		ttvplayerframe.parentNode.appendChild(miniAdPlayer);
 	}
 }
@@ -447,14 +448,15 @@ function prepAdPlayer(realPlayerNode){
 			awaitHtmlElement(document,'[data-test-selector="ad-banner-default-text"]','inf',() =>{
 				miniAdPlayer.style.bottom = '-100%';
 				miniAdPlayer.setAttribute('data-ad-playing','false');
-				miniAdPlayer.querySelector('video').muted = true;
+				if(miniAdPlayer.className.includes('persistent-player__border--mini'))
+					miniAdPlayer.querySelector('video').muted = true;
 				awaitHtmlElement(document,'[data-test-selector="ad-banner-default-text"]','inf', adHandler);
 			},true);
 		}
 
 		awaitHtmlElement(document,'[data-test-selector="ad-banner-default-text"]','inf', adHandler);
 		awaitHtmlElement(document,'#ttv_adEraser_miniAdPlayer','inf', ()=>{
-			if(frame.contentWindow.document.querySelector('[data-test-selector="sad-overlay"]') === null)
+			if(document.querySelector('#ttvplayerframe').contentWindow.document.querySelector('[data-test-selector="sad-overlay"]') === null)
 				document.querySelector('#ttv_adEraser_miniAdPlayer').setAttribute('class','video-player persistent-player persistent-player__border--mini persistent-player__border--mini tw-elevation-5 tw-overflow-hidden');
 		},false,false);
 	}
