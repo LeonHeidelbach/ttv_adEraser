@@ -101,7 +101,7 @@ async function awaitTwitchPlayer(){
 		// setItem('quality-bitrate','230000');
 		// setItem('video-quality','{"default":"160p30"}');
 	}
-	awaitHtmlElement(document, 'video', 'inf', () =>{
+	awaitHtmlElement(document, ['video','[data-a-target="player-theatre-mode-button"]'], 'inf', () =>{
 		ttvTheaterButtonMover();
 		twitchAdBlock();
 	});
@@ -456,8 +456,11 @@ function prepAdPlayer(realPlayerNode){
 
 		awaitHtmlElement(document,'[data-test-selector="ad-banner-default-text"]','inf', adHandler);
 		awaitHtmlElement(document,'#ttv_adEraser_miniAdPlayer','inf', ()=>{
-			if(document.querySelector('#ttvplayerframe').contentWindow.document.querySelector('[data-test-selector="sad-overlay"]') === null)
-				document.querySelector('#ttv_adEraser_miniAdPlayer').setAttribute('class','video-player persistent-player persistent-player__border--mini persistent-player__border--mini tw-elevation-5 tw-overflow-hidden');
+			try{
+				if(document.querySelector('#ttvplayerframe').contentWindow.document.querySelector('[data-test-selector="sad-overlay"]') === null)
+					document.querySelector('#ttv_adEraser_miniAdPlayer').setAttribute('class','video-player persistent-player persistent-player__border--mini persistent-player__border--mini tw-elevation-5 tw-overflow-hidden');
+				else document.querySelector('#ttv_adEraser_miniAdPlayer').classList.add('video-player');
+			}catch(e){}
 		},false,false);
 	}
 }
@@ -534,33 +537,38 @@ async function ttvPlayerErrorHandler(frameContent){
 
 var theaterModeButton;
 function ttvTheaterButtonMover(){
+	if(theaterModeButton !== undefined) return;
 	let cloneButton = buttonNode => buttonNode.cloneNode(true);
-	theaterButtonNode = top.window.document.querySelector('[data-a-target="player-theatre-mode-button"]').parentElement;
-	theaterModeButton = cloneButton(theaterButtonNode);
+	theaterButtonNode = top.window.document.querySelector('[data-a-target="player-theatre-mode-button"]');
+	theaterButtonNode.addEventListener('click', () => {theaterModeButtonClicked(true)}, false);
+	theaterModeButton = cloneButton(theaterButtonNode.parentElement);
 	// document.head.appendChild(window.parent.document.querySelector('[data-a-target="player-theatre-mode-button"]')).setAttribute('id','theaterModeButton');
+}
+
+// theater mode button click event handler
+
+function theaterModeButtonClicked(keyEvt=false){
+	let tDoc = top.document;
+	let ttvplayerframe = tDoc.getElementById('ttvplayerframe');
+	let ttvplayerframecard = ttvplayerframe.contentWindow.document.querySelector(".tw-card");
+	if(keyEvt)
+		with(ttvplayerframe){
+			if(getAttribute('data-theaterMode') === 'false'){
+				setAttribute('data-theaterMode','true');
+				if(ttvplayerframecard !== null) ttvplayerframecard.style.display = '';
+				parentElement.classList.remove('video-player__container--resize-calc');
+			}else{
+				setAttribute('data-theaterMode','false');
+				if(ttvplayerframecard !== null) ttvplayerframecard.style.display = 'none';
+				parentElement.classList.add('video-player__container--resize-calc');
+			}
+		}
+	else tDoc.querySelector('[data-a-target="player-theatre-mode-button"]').click();
 }
 
 // add a new theater mode button to the embedded stream player as well as the keyboard shortcut event handlers
 
 function ttvTheaterMode(frame){
-	function theaterModeButtonClicked(keyEvt=false){
-		let tDoc = top.document;
-		let ttvplayerframe = tDoc.getElementById('ttvplayerframe');
-		with(ttvplayerframe){
-			if(getAttribute('data-theaterMode') === 'false'){
-				setAttribute('data-theaterMode','true');
-				ttvplayerframe.contentWindow.document.querySelector(".tw-card").style.display = '';
-				parentElement.classList.remove('video-player__container--resize-calc');
-			}else{
-				setAttribute('data-theaterMode','false');
-				ttvplayerframe.contentWindow.document.querySelector(".tw-card").style.display = 'none';
-				parentElement.classList.add('video-player__container--resize-calc');
-			}
-		}
-		if(!keyEvt)
-			tDoc.querySelector('[data-a-target="player-theatre-mode-button"]').click();
-	}
-
 	function keyEventHandler(evt){
 		if (evt.target.nodeName === 'INPUT' || evt.target.nodeName === 'TEXTAREA') return;
 		let contetnWindow = ttvplayerframe.contentWindow.document;
@@ -583,11 +591,10 @@ function ttvTheaterMode(frame){
 		}
 	}
 
+	if(frame.querySelector('[data-a-target="player-theatre-mode-button"]') !== null) return;
 	let fullScreenModeButton = frame.querySelector('[data-a-target="player-fullscreen-button"]');
-	if(theaterModeButton === undefined) return;
 	insertSiblingNodeBefore(theaterModeButton,fullScreenModeButton.parentNode);
-	theaterModeButton.removeEventListener('click', theaterModeButtonClicked, true);
-	theaterModeButton.addEventListener('click', theaterModeButtonClicked, true);
+	theaterModeButton.addEventListener('click', () => {theaterModeButtonClicked()}, true);
 	top.document.getElementById('ttvplayerframe').contentWindow.document.addEventListener("keydown", iFrameKeyEventHandler,true);
 	if(top.document.getElementById('ttvplayerframe').getAttribute('data-listening') === 'true') return;
 	top.window.addEventListener("keydown", keyEventHandler,true);
@@ -597,6 +604,7 @@ function ttvTheaterMode(frame){
 // change the location of the embedded stream player
 
 function changeTwitchIframeLocation(details){
+	if(details?.url?.includes('/clip/')) switchMiniAdToEmbedPlayer();
 	let quality = localStorage["ttv_adEraser_embedQuality"] || "chunked";
 	let twitchUrlTestPattern = new RegExp(/(.*)\/\/(www\.)?(twitch\.tv)\/(.*)$/, 'gmi');
 	var frame = document.getElementById('ttvplayerframe');
@@ -628,6 +636,7 @@ function changeTwitchIframeLocation(details){
 // replace the normal stream player with an ad free embed player
 
 function twitchAdBlock(){
+	if(top.location.href.includes('/clip/')) return;
 	let quality = localStorage["ttv_adEraser_embedQuality"] || "chunked";
 	let channelPlayer = document.querySelector('.video-player');
 	if (channelPlayer === null) return;
