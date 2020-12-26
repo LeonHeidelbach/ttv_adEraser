@@ -73,6 +73,7 @@ function addHubButtonEventListeners(){
 	document.getElementById('ttv_settings_collapse').parentNode.addEventListener('click', ttv_settings_collapse_clicked, false);
 	document.getElementById('enable_ttv_vplayer_settings').addEventListener('click', enable_ttv_vplayer_settings_clicked, false);
 	document.getElementById('enable_ttv_peek_player').addEventListener('click', enable_ttv_peek_player_clicked, false);
+	document.getElementById('enable_ttv_peek_previewCard').addEventListener('click', enable_ttv_peek_previewCard_clicked, false);
 	document.getElementById('enable_ttv_miniAdPlayer').addEventListener('click', enable_ttv_miniAdPlayer_clicked, false);
 	document.getElementById('enable_ttv_vplayer_mousewheel').addEventListener('click', enable_ttv_vplayer_mousewheel_clicked, false);
 	document.getElementById('enable_ttv_vplayer_click_play_pause').addEventListener('click', enable_ttv_vplayer_click_play_pause_clicked, false);

@@ -16,7 +16,8 @@ var browser = navigator.userAgent;
 // popup settings items
 
 let valueSettingsItems = ['ttv_peek_player_size||240'];
-let booleanSettingsItems = ['enable_ttv_adEraser','enable_ttv_vplayer_settings','enable_ttv_peek_player','enable_ttv_miniAdPlayer','enable_ttv_vplayer_mousewheel','enable_ttv_vplayer_click_play_pause','enable_ttv_vplayer_compressor','enable_ttv_vplayer_pip'];
+let booleanSettingsItems = ['enable_ttv_adEraser','enable_ttv_vplayer_settings','enable_ttv_peek_player','enable_ttv_peek_previewCard','enable_ttv_miniAdPlayer','enable_ttv_vplayer_mousewheel','enable_ttv_vplayer_click_play_pause','enable_ttv_vplayer_compressor','enable_ttv_vplayer_pip'];
+let disabledBooleanSettingsItems = ['enable_ttv_peek_previewCard'];
 let onlyChromium = ['enable_ttv_vplayer_compressor','enable_ttv_vplayer_pip'];
 
 // retrieve user settings from background and popup script
@@ -32,7 +33,7 @@ async function retrieveuserSettingsInit(result){
         }
         booleanSettingsItems.forEach(id => {
             if (userSettings[id] === undefined)
-                userSettings[id] = true;
+                userSettings[id] = (disabledBooleanSettingsItems.includes(id) ? false : true);
         });
 		setStorageItem({userSettings: userSettings},'sync');
 	}

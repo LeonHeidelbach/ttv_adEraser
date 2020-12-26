@@ -153,8 +153,13 @@ async function peekPlayerPrepper(){
 		var localNonce = peekPlayerNonce = new Object();
 		setTimeout(async () =>{
 			if(localNonce === peekPlayerNonce){
-				if(document.getElementById('ttvpeekplayerframe') !== null || await awaitHtmlElement(document, '.dialog-layer',4000))
-					addPeekPlayer(urlObj);
+				if(settings.userSettings.enable_ttv_peek_previewCard){
+					if(document.getElementById('ttvpeekpreviewcard') !== null || await awaitHtmlElement(document, '.dialog-layer',4000))
+						addPreviewCard(urlObj);
+				}else{
+					if(document.getElementById('ttvpeekplayerframe') !== null || await awaitHtmlElement(document, '.dialog-layer',4000))
+						addPeekPlayer(urlObj);
+				}
 			}
 		},500);
 	}
@@ -164,22 +169,71 @@ async function peekPlayerPrepper(){
 	}
 }
 
+// spawn the peek preview card
+
+async function addPreviewCard(urlObj){
+	await updateUserSettings();
+	let playerHeight = (settings.userSettings.ttv_peek_player_size !== undefined ? settings.userSettings.ttv_peek_player_size : 240);
+	let element = document.querySelector('.dialog-layer .tw-pd-x-05').lastChild;
+	let frameWrapper = document.createElement('div');
+	let frameURL = `https://static-cdn.jtvnw.net/previews-ttv/live_user_${urlObj.contentId}-${Math.round(playerHeight*16/9)}x${playerHeight}.jpg?timestamp=${new Date().getTime()}`;
+	frameWrapper.setAttribute('style',`background-color: #000000; width: ${playerHeight*16/9}px; height: ${playerHeight}px; margin: 0 0 5px 0;`);
+	frameWrapper.innerHTML = `<img id='ttvpeekpreviewcard' class='tw-image' src='${frameURL}' alt='Oops... someting went wrong. There should be an image here.' style="display:none; width: 100%; width: ${Math.round(playerHeight*16/9)}px; height: ${playerHeight}px;">
+							  <img id="ttv_adEraser_loading" src="${getExtDir('/IMG/ExtIcon-16.png')}" style="position: absolute; top: 18px; left: 32px;">
+	`;
+	if (element !== null)
+		if(document.getElementById('ttvpeekpreviewcard') === null){
+			if(document.getElementById('ttvpeekplayerframe') !== null) removeHTMLElement(document.getElementById('ttvpeekplayerframe').parentNode);
+			insertSiblingNodeBefore(frameWrapper,element);
+			loadingIndicator(true,document.getElementById('ttvpeekpreviewcard').parentNode,'transform: translate(-50%,-50%) scale(.5)');
+			document.getElementById('ttvpeekpreviewcard').addEventListener('load', () =>{loadingIndicator(false); document.getElementById('ttvpeekpreviewcard').style.display = '';}, false);
+			document.getElementById('ttvpeekpreviewcard').addEventListener('error', () =>{loadingIndicator(false); document.getElementById('ttvpeekpreviewcard').style.display = '';}, false);
+		}else{
+			document.getElementById('ttvpeekpreviewcard').style.display = 'none';
+			document.getElementById('ttvpeekpreviewcard').src = frameURL;
+			loadingIndicator(true,document.getElementById('ttvpeekpreviewcard').parentNode,'transform: translate(-50%,-50%) scale(.5)');
+		}
+}
+
 // spawn the peek player
 
 async function addPeekPlayer(urlObj){
 	await updateUserSettings();
 	let playerHeight = (settings.userSettings.ttv_peek_player_size !== undefined ? settings.userSettings.ttv_peek_player_size : 240);
-	let element = document.querySelector('.dialog-layer .tw-pd-x-05').firstChild;
+	let element = document.querySelector('.dialog-layer .tw-pd-x-05').lastChild;
 	let frameWrapper = document.createElement('div');
 	let frameURL = `https://player.twitch.tv/?${urlObj.contentType}=${urlObj.contentId}&enableExtensions=true&parent=www.twitch.tv&quality=chunked`;
 	frameWrapper.setAttribute('style',`background-color: #000000; width: ${playerHeight*16/9}px; height: ${playerHeight}px; margin: 0 0 5px 0;`);
 	frameWrapper.innerHTML = `<iframe id='ttvpeekplayerframe' class='video-player' src='${frameURL}' data-a-target='video-player' data-a-player-type='site' data-test-selector='video-player__video-layout' data-theaterMode='false' data-listening='false' allowfullscreen='false' allow='autoplay' style="width: 100%; display: none; width: ${playerHeight*16/9}px; height: ${playerHeight}px;"></iframe>
 							  <img id="ttv_adEraser_loading" src="${getExtDir('/IMG/ExtIcon-16.png')}" style="position: absolute; top: 18px; left: 32px;">
 	`;
-	if (element !== null){
+	if (element !== null)
 		if(document.getElementById('ttvpeekplayerframe') === null){
+			if(document.getElementById('ttvpeekpreviewcard') !== null) removeHTMLElement(document.getElementById('ttvpeekpreviewcard').parentNode);
 			insertSiblingNodeBefore(frameWrapper,element);
 			loadingIndicator(true,document.getElementById('ttvpeekplayerframe').parentNode,'transform: translate(-50%,-50%) scale(.5)');
+			document.getElementById('ttvpeekplayerframe').addEventListener('load', () =>{
+				function displayPeekPlayer(){
+					var frame = document.getElementById('ttvpeekplayerframe');
+					with(frame){
+						contentWindow.document.querySelector('.video-player__default-player').style.display = 'none';
+						loadingIndicator(false);
+						style.visibility = '';
+						style.display = '';
+					}
+				}
+				
+				try{
+					displayPeekPlayer();
+				}catch(e){
+					if(e.name === 'SecurityError')
+						setTimeout(() => {
+							removeHTMLElement(document.querySelector('#ttvpeekplayerframe').parentNode);
+							addPeekPlayer(urlObj);
+						}, 500);
+					return;
+				}
+			});
 		}else if (frameURL !== document.getElementById('ttvpeekplayerframe').src){
 			loadingIndicator(true,document.getElementById('ttvpeekplayerframe').parentNode,'transform: translate(-50%,-50%) scale(.5)');
 			with(document.getElementById('ttvpeekplayerframe')){
@@ -188,29 +242,6 @@ async function addPeekPlayer(urlObj){
 			}
 
 		}
-		document.getElementById('ttvpeekplayerframe').addEventListener('load', () =>{
-			function displayPeekPlayer(){
-				var frame = document.getElementById('ttvpeekplayerframe');
-				with(frame){
-					contentWindow.document.querySelector('.video-player__default-player').style.display = 'none';
-					loadingIndicator(false);
-					style.visibility = '';
-					style.display = '';
-				}
-			}
-			
-			try{
-				displayPeekPlayer();
-			}catch(e){
-				if(e.name === 'SecurityError')
-					setTimeout(() => {
-						removeHTMLElement(document.querySelector('#ttvpeekplayerframe').parentNode);
-						addPeekPlayer(urlObj);
-					}, 500);
-				return;
-			}
-		});
-	}
 }
 
 // add selected player features to the embedded stream player

@@ -69,7 +69,7 @@ var ttv_adEraser_hub = `
 							<h3 style="color: #ffffff; font-size: 10pt; padding: 0; margin: 8px 0 8px 5px;">UI Options</h3>
 						</div>
 					</div>
-					<div class="table body" style="display: block; max-height: 100px; width:102.5%; overflow-y: scroll;">
+					<div class="table body" style="display: block; max-height: 100px; width:102.5%; overflow-y: scroll; margin-top: 2px;">
 						<div>
 							<div style="padding: 10px 0 10px 7px;">
 								<span style="color: #ffffff; font-size: 9pt;">Hover over a channel icon in the side bar to peek into the stream. Use your mouse wheel to change the volume.</span>
@@ -79,6 +79,17 @@ var ttv_adEraser_hub = `
 							<div style="padding: 0 0 0 15px">
 								<label class="switch" style="float:right;">
 									<input id="enable_ttv_peek_player" type="checkbox">
+									<span></span>
+								</label>
+							</div>
+						</div>
+						<div>
+							<div style="padding: 10px 0 10px 7px;">
+								<span style="color: #ffffff; font-size: 9pt;">Use channel card previews instead of an embedded stream player.</span>
+							</div>
+							<div style="padding: 0 0 0 15px">
+								<label class="switch" style="float:right;">
+									<input id="enable_ttv_peek_previewCard" type="checkbox">
 									<span></span>
 								</label>
 							</div>
@@ -94,7 +105,7 @@ var ttv_adEraser_hub = `
 							<h3 style="color: #ffffff; font-size: 10pt; padding: 0; margin: 8px 0 8px 5px;">Player Options</h3>
 						</div>
 					</div>
-					<div class="table body" style="display: block; max-height: 100px; width:102.5%; overflow-y: scroll;">
+					<div class="table body" style="display: block; max-height: 100px; width:102.5%; overflow-y: scroll; margin-top: 2px;">
 						<div>
 							<div style="padding: 10px 0 10px 7px;">
 								<span style="color: #ffffff; font-size: 9pt;">Show mini ad player when an ad break starts and hide it when it is over.</span>

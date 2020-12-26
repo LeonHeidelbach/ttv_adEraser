@@ -33,9 +33,9 @@ async function applyUserSettings(){
 		let element = document.getElementById(id);
 		let userSettingsValue = true;
 		if (userSettings[id] === undefined){ 
-			if(browser.toLowerCase().includes('firefox') && onlyChromium.includes(id)) userSettingsValue = false;
-			changeUserSetting(id, true);
-			userSettings[id] = true;
+			if(browser.toLowerCase().includes('firefox') && onlyChromium.includes(id) || disabledBooleanSettingsItems.includes(id)) userSettingsValue = false;
+			changeUserSetting(id, userSettingsValue);
+			userSettings[id] = userSettingsValue;
 		}
 		element.nextElementSibling.className = 'slider round';
 		element.checked =  userSettings[id];
@@ -113,6 +113,15 @@ async function enable_ttv_vplayer_settings_clicked(){
 // peek player enable/disable switch event handler method
 
 async function enable_ttv_peek_player_clicked(){
+	let previewCard = document.querySelector('#enable_ttv_peek_previewCard');
+	if(this.checked) previewCard.disabled = false;
+	else previewCard.disabled = true;
+	await checkBoxValueSwitcher(this.id);
+}
+
+// peek preview card enable/disable switch event handler method
+
+async function enable_ttv_peek_previewCard_clicked(){
 	await checkBoxValueSwitcher(this.id);
 }
 
