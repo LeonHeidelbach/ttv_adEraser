@@ -72,6 +72,15 @@ You can download the dev_build from the following URL: https://github.com/LeonHe
 
 ## Changelog
 
+
+### [v.1.2] Release - 27.12.2020
+
+- TTV AdEraser now switches the embedded player and the original one if the "purple screen" with twitch's "disable ad block" notification is displayed. As soon as the "purple screen" disappears, players are switched again. If both, the "purple screen" as well as an ad are displayed at the same time, you might see either for a couple of seconds until the stream continues. This is unfortunately the best method of blocking ads at the moment.
+
+- The peek preview feature can now show a preview card thumbnail of the stream instead of the embedded stream. A new option for this has been added to the "UI options" menu.
+
+- fixed a bug where twitch clips would not be played
+
 ### [v.1.1] [dev_build](https://github.com/LeonHeidelbach/ttv_adEraser/tree/) - 17.12.2020
 
 - Added Firefox support

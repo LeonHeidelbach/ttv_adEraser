@@ -290,16 +290,12 @@ async function ttvPlayerSetup(){
 	
 	(function waitForSadOverlay(){
 		awaitHtmlElement(frame,'[data-test-selector="sad-overlay"]','inf', () =>{
-			// if(document.querySelector('[data-ad-playing="false"]') === null){
-			// 	waitForSadOverlay();
-			// }else{
-				switchMiniAdToEmbedPlayer(false);
-				awaitHtmlElement(frame,'[data-test-selector="sad-overlay"]','inf', ()=>{
-					ttvPlayerSetup();
-					switchMiniAdToEmbedPlayer(true);
-					waitForSadOverlay();
-				},true);
-			// }
+			switchMiniAdToEmbedPlayer(false);
+			awaitHtmlElement(frame,'[data-test-selector="sad-overlay"]','inf', ()=>{
+				ttvPlayerSetup();
+				switchMiniAdToEmbedPlayer(true);
+				waitForSadOverlay();
+			},true);
 		});
 	})();
 }
@@ -425,7 +421,6 @@ let miniAdPlayerOverlayNonce;
 function prepAdPlayer(realPlayerNode){
 	if (document.getElementById('ttv_adEraser_miniAdPlayer') === null){
 		let frame = document.querySelector('#ttvplayerframe');
-		// let miniAdPlayer = document.createElement('div');
 		let miniAdPlayer = realPlayerNode.parentNode;
 		
 		let miniAdPlayerOverlayNode = document.createElement('div');
@@ -443,9 +438,6 @@ function prepAdPlayer(realPlayerNode){
 		}
 
 		document.body.appendChild(miniAdPlayer);
-		// This overlay is currently not in use
-		// document.querySelector('#ttv_adEraser_miniAdPlayer').appendChild(miniAdPlayerOverlayNode);
-		// removeHTMLElement(document.querySelector('.player-controls__right-control-group'));
 
 		frame.addEventListener('mouseover', async () =>{
 			await updateUserSettings();
@@ -463,27 +455,6 @@ function prepAdPlayer(realPlayerNode){
 				miniAdPlayer.style.bottom = '0px';
 			else miniAdPlayer.style.bottom = '-100%';
 		}, false);
-
-		// This overlay is currently not in use
-
-		// with(document.querySelector('#ttv_adEraser_miniAdPlayerGui')){
-		// 	addEventListener('mouseover', () =>{
-		// 		miniAdPlayerOverlayNonce = new Object();
-		// 		miniAdPlayerOverlayNode.style.opacity = '1';
-		// 	});
-
-		// 	addEventListener('mouseleave', () =>{
-		// 		var localNonce = miniAdPlayerOverlayNonce = new Object();
-		// 		setTimeout(() => {
-		// 			if(localNonce === miniAdPlayerOverlayNonce)
-		// 				miniAdPlayerOverlayNode.style.opacity = '0';
-		// 		}, 500);
-		// 	});
-
-		// 	firstElementChild.addEventListener('click', () => {
-		// 		miniAdPlayer.style.display = 'none';
-		// 	},false);
-		// }
 
 		document.querySelector('.video-player__default-player').addEventListener('wheel', function(evt){handleTwitchPlayerScroll(evt,document.querySelector('#ttv_adEraser_miniAdPlayer'))}, false);
 
@@ -591,7 +562,6 @@ function ttvTheaterButtonMover(){
 	theaterButtonNode = top.window.document.querySelector('[data-a-target="player-theatre-mode-button"]');
 	theaterButtonNode.addEventListener('click', () => {theaterModeButtonClicked(true)}, false);
 	theaterModeButton = cloneButton(theaterButtonNode.parentElement);
-	// document.head.appendChild(window.parent.document.querySelector('[data-a-target="player-theatre-mode-button"]')).setAttribute('id','theaterModeButton');
 }
 
 // theater mode button click event handler
@@ -677,7 +647,6 @@ function changeTwitchIframeLocation(details){
 			frame.style.visibility = 'hidden';
 			loadingIndicator(true,frame.parentNode.parentNode,'transform: translate(-50%,-50%) scale(.5)');
 			frame.contentWindow.location.replace(`https://player.twitch.tv/?${urlObj.contentType}=${urlObj.contentId}&enableExtensions=true&parent=www.twitch.tv&quality=${quality}`);
-			// frame.setAttribute('src',`https://player.twitch.tv/?${urlObj.contentType}=${urlObj.contentId}&parent=www.twitch.tv&quality=${quality}`);
 		}
 	});
 }
