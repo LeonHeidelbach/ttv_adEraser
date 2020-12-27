@@ -49,43 +49,43 @@ function reloadAllttvTabs(iframeOnly=false){
 	});
 }
 
-// block background gql requests with a specific operationName
+// block background gql requests with a specific operationName (not yet in use - no effects on ad streaming behaviour)
 
-chrome.webRequest.onBeforeRequest.addListener(
-	(details) => {
-		// if (details.initiator !== 'https://player.twitch.tv') return;
-		try{
-			let requestPayload = JSON.parse(decodeURIComponent(stringFromArrayBuffer(details.requestBody.raw[0].bytes)));
+// chrome.webRequest.onBeforeRequest.addListener(
+// 	(details) => {
+// 		// if (details.initiator !== 'https://player.twitch.tv') return;
+// 		try{
+// 			let requestPayload = JSON.parse(decodeURIComponent(stringFromArrayBuffer(details.requestBody.raw[0].bytes)));
 			
-			if (!Array.isArray(requestPayload)) return;
-			var block = false;
-			requestPayload.forEach(item =>{
-				if(
-					item.operationName === "ClientSideAdEventHandling_RecordAdEvent"
-					// item.operationName === "VideoPlayerStreamInfoOverlayChannel" ||
-					// item.operationName === "EmbedPlayer_UserData" ||
-					// item.operationName === "updateUserViewedVideo" ||
-					// item.operationName === "WatchTrackQuery" ||
-					// item.operationName === "PbyPGame" ||
-					// item.operationName === "Consent" ||
-					// item.operationName === "CountessData" ||
-					// item.operationName === "StreamRefetchManager" ||
-					// item.operationName === "PlayerTrackingContextQuery" ||
-					// item.operationName === "Core_Services_Spade_CurrentUser" ||
-					// item.operationName === "VideoAdRequestHandling" 
-					// item.operationName === "PlaybackAccessToken_Template"
+// 			if (!Array.isArray(requestPayload)) return;
+// 			var block = false;
+// 			requestPayload.forEach(item =>{
+// 				if(
+// 					item.operationName === "ClientSideAdEventHandling_RecordAdEvent"
+// 					item.operationName === "VideoPlayerStreamInfoOverlayChannel" ||
+// 					item.operationName === "EmbedPlayer_UserData" ||
+// 					item.operationName === "updateUserViewedVideo" ||
+// 					item.operationName === "WatchTrackQuery" ||
+// 					item.operationName === "PbyPGame" ||
+// 					item.operationName === "Consent" ||
+// 					item.operationName === "CountessData" ||
+// 					item.operationName === "StreamRefetchManager" ||
+// 					item.operationName === "PlayerTrackingContextQuery" ||
+// 					item.operationName === "Core_Services_Spade_CurrentUser" ||
+// 					item.operationName === "VideoAdRequestHandling" 
+// 					item.operationName === "PlaybackAccessToken_Template"
 				
-				){
-					block = true;
-					return;
-				}
-			});
+// 				){
+// 					block = true;
+// 					return;
+// 				}
+// 			});
 			
-			if (block) return { cancel:true };
-		}catch(e){
-			return;
-		}
-	},
-	{ urls: ["*://gql.twitch.tv/gql*"] },
-	['blocking','requestBody','extraHeaders']
-);
+// 			if (block) return { cancel:true };
+// 		}catch(e){
+// 			return;
+// 		}
+// 	},
+// 	{ urls: ["*://gql.twitch.tv/gql*"] },
+// 	['blocking','requestBody','extraHeaders']
+// );
