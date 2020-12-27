@@ -49,7 +49,7 @@ function reloadAllttvTabs(iframeOnly=false){
 	});
 }
 
-// block background gql requests with a specific opeartionName
+// block background gql requests with a specific operationName
 
 chrome.webRequest.onBeforeRequest.addListener(
 	(details) => {
@@ -76,17 +76,12 @@ chrome.webRequest.onBeforeRequest.addListener(
 					// item.operationName === "PlaybackAccessToken_Template"
 				
 				){
-					console.log(item)
-					console.log('GQL blocked');
 					block = true;
 					return;
 				}
 			});
 			
 			if (block) return { cancel:true };
-			// console.log(requestPayload[0].operationName);
-			// console.log(details);
-			// console.log('calling gql');
 		}catch(e){
 			return;
 		}

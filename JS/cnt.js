@@ -380,21 +380,39 @@ function miniPlayerSetup(frame){
 // switch ad mini player to main player location and back
 
 function switchMiniAdToEmbedPlayer(tobody=false){
-	let ttvplayerframe = document.getElementById('ttvplayerframe');
-	let miniAdPlayer = document.getElementById('ttv_adEraser_miniAdPlayer');
-	let videoPlayer = miniAdPlayer.querySelector('video');
+	var ttvplayerframe = document.getElementById('ttvplayerframe');
+	var miniAdPlayer = document.getElementById('ttv_adEraser_miniAdPlayer');
+	var videoPlayer = miniAdPlayer.querySelector('video');
+	var volumeSlider = document.querySelector('[data-a-target="player-volume-slider"]');
+
+	function miniAdPlayerVolumeChangeEvent(){
+		let vsEvt = document.createEvent("Events");
+		videoPlayer.muted = ttvplayerframe.contentWindow.document.querySelector('video').muted;
+		videoPlayer.volume = ttvplayerframe.contentWindow.document.querySelector('[data-a-target="player-volume-slider"]').value;
+		vsEvt.initEvent("change", true, true);
+		volumeSlider.dispatchEvent(vsEvt);
+	}
+
+	function miniAdPlayerMuteChangeEvent(){
+		localStorage.setItem('video-muted','{"carousel":false,"default":true}');
+		videoPlayer.muted = true;
+		document.querySelector('[data-a-target="player-volume-slider"]').removeEventListener('play', miniAdPlayerMuteChangeEvent, false);
+	}
 	
 	if(tobody){
-		videoPlayer.muted = true;
+		with(document.getElementById('ttv_adEraser_miniAdPlayer').querySelector('video')){
+			removeEventListener('play', miniAdPlayerVolumeChangeEvent, false);
+			addEventListener('play', miniAdPlayerMuteChangeEvent, false);
+		}
 		changeAdPlayerQuality('160p');
+		videoPlayer.muted = true;
 		miniAdPlayer.setAttribute('class','video-player persistent-player persistent-player__border--mini persistent-player__border--mini tw-elevation-5 tw-overflow-hidden');
-		miniAdPlayer.setAttribute('style','transition: all 200ms ease-in-out; left: ${getSideNavBarState()}; position: fixed; z-index: 1000; height: 15.75rem; width: 28rem; bottom: -100%; margin: 1rem;');
+		miniAdPlayer.setAttribute('style',`transition: all 200ms ease-in-out; left: ${getSideNavBarState()}; position: fixed; z-index: 1000; height: 15.75rem; width: 28rem; bottom: -100%; margin: 1rem;`);
 		document.body.appendChild(miniAdPlayer);
 		removeHTMLElement(document.getElementById('ttv_adEraser_miniAdPlayer_scaler'));
 	}else{
-		videoPlayer.muted = false;
-		videoPlayer.volume = ttvplayerframe.contentWindow.document.querySelector('[data-a-target="player-volume-slider"]').value;
-		changeAdPlayerQuality(localStorage.getItem("ttv_adEraser_embedQuality"));
+		document.getElementById('ttv_adEraser_miniAdPlayer').querySelector('video').addEventListener('play', miniAdPlayerVolumeChangeEvent, false);
+		changeAdPlayerQuality(localStorage.getItem("ttv_adEraser_embedQuality").replace('p30','p'));
 		miniAdPlayer.setAttribute('class','video-player tw-absolute tw-bottom-0 tw-left-0 tw-overflow-hidden tw-right-0 tw-top-0 video-player__container video-player__container--resize-calc');
 		miniAdPlayer.removeAttribute('style');
 		ttvplayerframe.parentNode.appendChild(miniAdPlayer);
